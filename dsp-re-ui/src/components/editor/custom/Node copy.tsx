@@ -7,18 +7,12 @@ const { RefSocket, RefControl } = Presets.classic;
 
 type NodeExtraData = { width?: number; height?: number };
 
-// FAFAFC
-// B8C3BD
-// F0D97F
-// EB6531
-// 199CA2
-
 export const NodeStyles = styled.div<
   NodeExtraData & { selected: boolean; styles?: (props: any) => any }
 >`
-  display: flex;
-  background: #a4c2d5;
-  border: 1px solid #B8C3BD;
+  background: black;
+  border: 2px solid grey;
+  border-radius: 10px;
   cursor: pointer;
   box-sizing: border-box;
   width: ${(props) =>
@@ -29,40 +23,54 @@ export const NodeStyles = styled.div<
   position: relative;
   user-select: none;
   &:hover {
-    border: 2px solid #000;
+    background: #333;
   }
   ${(props) =>
     props.selected &&
     css`
-      background: #199CA2;
+      border-color: red;
     `}
   .title {
-    display: flex;
+    color: white;
     font-family: sans-serif;
-    margin: auto 0px auto 10px;
-    font-size: 16px;
-    height: 100%;
-    width: 100%;
-    text-overflow: hidden;
-    align-items: center;
+    font-size: 18px;
+    padding: 8px;
   }
   .output {
+    text-align: right;
   }
   .input {
+    text-align: left;
   }
   .output-socket {
+    text-align: right;
+    margin-right: -1px;
+    display: inline-block;
   }
   .input-socket {
     text-align: left;
-    // margin-left: -1px;
+    margin-left: -1px;
     display: inline-block;
   }
   .input-title,
   .output-title {
+    vertical-align: middle;
+    color: white;
+    display: inline-block;
+    font-family: sans-serif;
+    font-size: 14px;
+    margin: ${$socketmargin}px;
+    line-height: ${$socketsize}px;
   }
   .input-control {
+    z-index: 1;
+    width: calc(100% - ${$socketsize + 2 * $socketmargin}px);
+    vertical-align: middle;
+    display: inline-block;
   }
   .control {
+    display: block;
+    padding: ${$socketmargin}px ${$socketsize / 2 + $socketmargin}px;
   }
   ${(props) => props.styles && props.styles(props)}
 `;
@@ -106,21 +114,24 @@ export function CustomNode<Scheme extends ClassicScheme>(props: Props<Scheme>) {
       styles={props.styles}
       data-testid="node"
     >
-
-      <h4
-        // onPointerDown={(e) => {
-        //   e.stopPropagation();
-        //   console.log(">>>");
-        // }}
+      <div
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          console.log(">>>");
+        }}
         className="title"
         data-testid="title"
       >
         {label}
-      </h4>
+      </div>
       {/* Outputs */}
       {outputs.map(
         ([key, output]) =>
           output && (
+            <div className="output" key={key} data-testid={`output-${key}`}>
+              <div className="output-title" data-testid="output-title">
+                {output?.label}
+              </div>
               <RefSocket
                 name="output-socket"
                 side="output"
@@ -129,13 +140,25 @@ export function CustomNode<Scheme extends ClassicScheme>(props: Props<Scheme>) {
                 nodeId={id}
                 payload={output.socket}
               />
+            </div>
           )
-        )
-      }
-
+      )}
+      {/* Controls */}
+      {controls.map(([key, control]) => {
+        return control ? (
+          <RefControl
+            key={key}
+            name="control"
+            emit={props.emit}
+            payload={control}
+          />
+        ) : null;
+      })}
+      {/* Inputs */}
       {inputs.map(
         ([key, input]) =>
           input && (
+            <div className="input" key={key} data-testid={`input-${key}`}>
               <RefSocket
                 name="input-socket"
                 emit={props.emit}
@@ -144,9 +167,24 @@ export function CustomNode<Scheme extends ClassicScheme>(props: Props<Scheme>) {
                 nodeId={id}
                 payload={input.socket}
               />
+              {input && (!input.control || !input.showControl) && (
+                <div className="input-title" data-testid="input-title">
+                  {input?.label}
+                </div>
+              )}
+              {input?.control && input?.showControl && (
+                <span className="input-control">
+                  <RefControl
+                    key={key}
+                    name="input-control"
+                    emit={props.emit}
+                    payload={input.control}
+                  />
+                </span>
+              )}
+            </div>
           )
       )}
-
     </NodeStyles>
   );
 }
