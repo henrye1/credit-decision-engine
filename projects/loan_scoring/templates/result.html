@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Score Result</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 760px; color: #1f2937; }
+      .card { border: 1px solid #ddd; padding: 1rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+      .pill { display: inline-block; padding: 0.35rem 0.7rem; border-radius: 999px; font-weight: 700; margin-bottom: 0.75rem; }
+      .approve { background: #dcfce7; color: #166534; }
+      .refer { background: #fee2e2; color: #991b1b; }
+      .muted { color: #6b7280; }
+      code { background: #f5f5f5; padding: 0.2rem 0.4rem; }
+      pre { white-space: pre-wrap; word-break: break-word; background: #f8fafc; padding: 0.8rem; border-radius: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Score Result</h1>
+    <div class="card">
+      <span class="pill {{ result.decision }}">{{ result.decision|upper }}</span>
+      <p><strong>Risk band:</strong> {{ result.risk_band }}</p>
+      <p><strong>Reason codes:</strong> {{ result.reason_codes }}</p>
+      <p class="muted"><strong>Input:</strong></p>
+      <pre>{{ payload }}</pre>
+      <p class="muted"><strong>Score output:</strong></p>
+      <pre>{{ result }}</pre>
+    </div>
+    <p><a href="/">Back</a></p>
+  </body>
+</html>

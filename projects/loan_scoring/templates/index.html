@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loan Scoring UI</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 760px; color: #1f2937; }
+      .card { background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1px solid #dbeafe; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08); }
+      form { display: grid; gap: 0.8rem; }
+      label { font-weight: 600; }
+      input { padding: 0.7rem; border: 1px solid #cbd5e1; border-radius: 8px; }
+      button { padding: 0.75rem 1rem; width: fit-content; border: none; border-radius: 8px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
+      h1 { color: #1d4ed8; }
+      .subtle { color: #475569; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Loan Scoring UI</h1>
+      <p class="subtle">Enter applicant information and see the score estimate.</p>
+      <form action="/score" method="post">
+      <label>Debt</label>
+      <input name="debt" type="number" step="0.01" value="25000" required />
+
+      <label>Income</label>
+      <input name="income" type="number" step="0.01" value="50000" required />
+
+      <label>Credit Used</label>
+      <input name="credit_used" type="number" step="0.01" value="4000" required />
+
+      <label>Credit Limit</label>
+      <input name="credit_limit" type="number" step="0.01" value="10000" required />
+
+      <h3>Bureau Inputs</h3>
+      <label>Bureau Score</label>
+      <input name="bureau_score" type="number" step="0.01" value="650" />
+
+      <label>Adverse Accounts</label>
+      <input name="adverse_accounts" type="number" step="1" value="2" />
+
+      <label>Delinquency Count</label>
+      <input name="delinquency_count" type="number" step="1" value="1" />
+
+      <label>Default History</label>
+      <input name="default_history" type="number" step="1" value="0" />
+
+      <button type="submit">Score applicant</button>
+      </form>
+      <p><a href="/rules">Open rule configuration studio</a></p>
+    </div>
+  </body>
+</html>
