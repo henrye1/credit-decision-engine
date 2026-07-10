@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Pull Data — Loan Scoring{% endblock %}
+{% block styles %}
+      .card { background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1px solid #dbeafe; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08); margin-bottom: 1rem; }
+      h1 { color: #1d4ed8; }
+      .subtle { color: #475569; }
+      .sources { display: grid; gap: 0.75rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+      .source { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; background: #fff; border: 1px solid #dbeafe; border-radius: 8px; padding: 0.8rem 1rem; }
+      .source strong { display: block; }
+      .source span { color: #64748b; font-size: 0.9rem; }
+      .badge { flex: none; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 999px; background: #e0f2fe; color: #075985; }
+      .cta { display: inline-block; margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; background: #2563eb; color: #fff; font-weight: 700; text-decoration: none; }
+{% endblock %}
+{% block content %}
+    <div class="card">
+      <h1>Pull Data</h1>
+      <p class="subtle">Gather the applicant and bureau information the decision engine needs. Automated pulls are planned — for now, applicant data is captured manually on the Score Client step.</p>
+      <ul class="sources">
+        <li class="source">
+          <div>
+            <strong>Credit bureau report</strong>
+            <span>Bureau score, adverse accounts, delinquencies and default history.</span>
+          </div>
+          <span class="badge">Planned</span>
+        </li>
+        <li class="source">
+          <div>
+            <strong>Bank transaction data</strong>
+            <span>Income verification and affordability from statement feeds.</span>
+          </div>
+          <span class="badge">Planned</span>
+        </li>
+        <li class="source">
+          <div>
+            <strong>Internal records</strong>
+            <span>Existing exposures, arrears and account conduct.</span>
+          </div>
+          <span class="badge">Planned</span>
+        </li>
+        <li class="source">
+          <div>
+            <strong>Manual capture</strong>
+            <span>Enter debt, income and bureau inputs directly on the scoring form.</span>
+          </div>
+          <span class="badge">Available</span>
+        </li>
+      </ul>
+      <a class="cta" href="/rules">Continue to Configure Rules</a>
+    </div>
+{% endblock %}

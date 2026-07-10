@@ -1,11 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Rule Configuration</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 1100px; color: #1f2937; }
+{% extends "base.html" %}
+{% block title %}Configure Rules — Loan Scoring{% endblock %}
+{% block page_width %}1100px{% endblock %}
+{% block styles %}
       .card { background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1px solid #dbeafe; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08); margin-bottom: 1rem; }
       form { display: grid; gap: 0.8rem; max-width: 480px; }
       input, select { padding: 0.7rem; border: 1px solid #cbd5e1; border-radius: 8px; }
@@ -20,7 +16,6 @@
       .published { background: #dcfce7; color: #166534; }
       .pending { background: #e0f2fe; color: #075985; }
       .rejected { background: #fee2e2; color: #991b1b; }
-      a { color: #2563eb; }
       .inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
       .edit-btn, .delete-btn, .save-btn, .cancel-btn, .add-btn { padding: 0.4rem 0.7rem; font-size: 0.85rem; width: auto; }
       .delete-btn { background: #dc2626; }
@@ -31,11 +26,21 @@
       .edit-row input, .edit-row select { padding: 0.4rem; font-size: 0.9rem; }
       .hidden-row { display: none; }
       .rules-grid { margin-top: 1rem; }
-    </style>
-  </head>
-  <body>
+      .activation-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+      #activation-form { max-width: none; }
+      #rule-checklist { display: grid; gap: 0.5rem; }
+      .rule-pick { display: grid; grid-template-columns: auto minmax(0, 1fr) 240px; gap: 0.6rem; align-items: center; background: #fff; border: 1px solid #dbeafe; border-radius: 8px; padding: 0.55rem 0.75rem; }
+      .rule-pick input[type="checkbox"] { width: 1.1rem; height: 1.1rem; }
+      .rule-pick-label { font-size: 0.9rem; min-width: 0; overflow-wrap: anywhere; }
+      .schema-panel { background: #fff; border: 1px solid #dbeafe; border-radius: 8px; padding: 0.9rem 1rem; position: sticky; top: 5.5rem; }
+      .schema-panel h3 { margin-top: 0; }
+      .schema-note { color: #64748b; font-size: 0.85rem; }
+      #schema-preview { background: #f8fafc; border-radius: 8px; padding: 0.8rem; white-space: pre-wrap; word-break: break-word; max-height: 420px; overflow: auto; }
+      @media (max-width: 900px) { .activation-grid { grid-template-columns: 1fr; } .rule-pick { grid-template-columns: auto minmax(0, 1fr); } .rule-pick select { grid-column: 2; } .schema-panel { position: static; } }
+{% endblock %}
+{% block content %}
     <div class="card">
-      <h1>Rule Configuration Studio</h1>
+      <h1>Configure Rules</h1>
       <p>Create a rule set, upload a workbook, review the imported rules, and publish when the outcome is approved. Users can also reject, return to draft, edit, and remove a rule set from this screen.</p>
       <p><a href="/rules/example">Download example upload sheet</a></p>
       <form action="/rules/upload" method="post" enctype="multipart/form-data">
@@ -223,7 +228,173 @@
       {% endif %}
     </div>
 
+    <div class="card" id="client-activation">
+      <h2>Client rule activation</h2>
+      <p>The rule sets above are the comprehensive policy list. Pick a rule set, select the rules that apply to this client, and link each selected rule to the database field its data comes from. The data schema on the right updates as you select.</p>
+      <div class="activation-grid">
+        <form id="activation-form" onsubmit="saveClientConfig(event)">
+          <label for="client-name">Client name</label>
+          <input id="client-name" placeholder="e.g. Acme Lending" required />
+          <label for="activation-rule-set">Rule set (comprehensive list)</label>
+          <select id="activation-rule-set" onchange="renderRuleChecklist()">
+            <option value="">Select a rule set&hellip;</option>
+            {% for rule_set in rule_sets %}
+            <option value="{{ rule_set.id }}">{{ rule_set.name }} ({{ rule_set.rules|length }} rules)</option>
+            {% endfor %}
+          </select>
+          <div id="rule-checklist"></div>
+          <button type="submit">Save client configuration</button>
+          <p id="activation-error" class="error" style="display:none;"></p>
+        </form>
+        <div class="schema-panel">
+          <h3>Data schema preview</h3>
+          <p class="schema-note">Updates live as rules are selected and linked to fields.</p>
+          <pre id="schema-preview">{
+  "fields": []
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Client configurations</h2>
+      {% if client_configs %}
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Rule set</th>
+            <th>Rules selected</th>
+            <th>Schema fields</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for config in client_configs %}
+          <tr>
+            <td>{{ config.client_name }}</td>
+            <td>{{ config.rule_set_name }}</td>
+            <td>{{ config.selected_rule_ids|length }}</td>
+            <td>{{ config.schema.fields|length }}</td>
+            <td>
+              <div class="inline">
+                <button type="button" class="edit-btn" onclick="toggleSchema('{{ config.id }}')">View schema</button>
+                <form action="/clients/delete" method="post" style="display:inline;">
+                  <input type="hidden" name="config_id" value="{{ config.id }}" />
+                  <button type="submit" class="delete-btn">Remove</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <tr id="schema-row-{{ config.id }}" class="hidden-row">
+            <td colspan="5"><pre>{{ config.schema | tojson(indent=2) }}</pre></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No client configurations yet. Save one above to generate a client schema.</p>
+      {% endif %}
+    </div>
+
+    <script id="rule-sets-data" type="application/json">{{ rule_sets | tojson }}</script>
+    <script id="data-fields-data" type="application/json">{{ data_fields | tojson }}</script>
+
     <script>
+      const RULE_SETS = JSON.parse(document.getElementById('rule-sets-data').textContent);
+      const ACTIVATION_DATA_FIELDS = JSON.parse(document.getElementById('data-fields-data').textContent);
+
+      function renderRuleChecklist() {
+        const ruleSetId = document.getElementById('activation-rule-set').value;
+        const container = document.getElementById('rule-checklist');
+        container.innerHTML = '';
+        const ruleSet = RULE_SETS.find(rs => rs.id === ruleSetId);
+        if (!ruleSet) { updateSchemaPreview(); return; }
+
+        const fieldOptions = ACTIVATION_DATA_FIELDS.map(f =>
+          `<option value="${f.key}">${f.label} (${f.key})</option>`
+        ).join('');
+
+        ruleSet.rules.forEach(rule => {
+          const row = document.createElement('div');
+          row.className = 'rule-pick';
+          row.innerHTML = `
+            <input type="checkbox" data-rule-id="${rule.rule_id}" onchange="updateSchemaPreview()" />
+            <span class="rule-pick-label"><strong>${rule.rule_id}</strong> ${rule.description || ''}</span>
+            <select data-mapping-for="${rule.rule_id}" onchange="updateSchemaPreview()">
+              <option value="">Link database field&hellip;</option>
+              ${fieldOptions}
+            </select>`;
+          container.appendChild(row);
+        });
+        updateSchemaPreview();
+      }
+
+      function collectSelection() {
+        const selected = [];
+        const mappings = {};
+        document.querySelectorAll('#rule-checklist input[type="checkbox"]').forEach(box => {
+          if (!box.checked) return;
+          const ruleId = box.dataset.ruleId;
+          selected.push(ruleId);
+          const select = document.querySelector(`#rule-checklist select[data-mapping-for="${ruleId}"]`);
+          if (select && select.value) mappings[ruleId] = select.value;
+        });
+        return { selected, mappings };
+      }
+
+      function updateSchemaPreview() {
+        const { selected, mappings } = collectSelection();
+        const fieldIndex = Object.fromEntries(ACTIVATION_DATA_FIELDS.map(f => [f.key, f]));
+        const fields = {};
+        const unmapped = [];
+        selected.forEach(ruleId => {
+          const source = mappings[ruleId];
+          if (!source) { unmapped.push(ruleId); return; }
+          const entry = fieldIndex[source];
+          if (!fields[source]) {
+            fields[source] = { source: source, table: entry.table, field: entry.field, label: entry.label, dtype: entry.dtype, rule_ids: [] };
+          }
+          fields[source].rule_ids.push(ruleId);
+        });
+        const schema = { fields: Object.values(fields), unmapped_rules: unmapped, selected_rules: selected };
+        document.getElementById('schema-preview').textContent = JSON.stringify(schema, null, 2);
+      }
+
+      function saveClientConfig(event) {
+        event.preventDefault();
+        const errorBox = document.getElementById('activation-error');
+        errorBox.style.display = 'none';
+        const { selected, mappings } = collectSelection();
+        fetch('/clients/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_name: document.getElementById('client-name').value,
+            rule_set_id: document.getElementById('activation-rule-set').value,
+            selected_rule_ids: selected,
+            field_mappings: mappings
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            errorBox.textContent = data.error || 'Unable to save the client configuration.';
+            errorBox.style.display = 'block';
+          }
+        })
+        .catch(error => {
+          errorBox.textContent = 'Error: ' + error;
+          errorBox.style.display = 'block';
+        });
+      }
+
+      function toggleSchema(configId) {
+        document.getElementById('schema-row-' + configId).classList.toggle('hidden-row');
+      }
+
       function toggleRulesGrid(ruleSetId) {
         const row = document.getElementById('rules-grid-row-' + ruleSetId);
         row.classList.toggle('hidden-row');
@@ -247,7 +418,7 @@
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
-        
+
         fetch(`/rules/${ruleSetId}/rule/${ruleIndex}`, {
           method: 'PUT',
           headers: {
@@ -297,13 +468,13 @@
       function addNewRule(ruleSetId) {
         const phase = prompt('Enter Phase (e.g., Early_rules_1):');
         if (!phase) return;
-        
+
         const ruleId = prompt('Enter Rule ID (e.g., Pac_001):');
         if (!ruleId) return;
-        
+
         const description = prompt('Enter Description:');
         if (!description) return;
-        
+
         const action = prompt('Enter Action (Approve/Decline/Refer):') || 'Refer';
         const disputable = confirm('Is this rule disputable?');
         const ruleApplied = prompt('Enter Rule Applied (e.g., In_decision_engine):') || 'In_decision_engine';
@@ -335,7 +506,4 @@
         });
       }
     </script>
-
-    <p><a href="/">Back to scoring UI</a></p>
-  </body>
-</html>
+{% endblock %}

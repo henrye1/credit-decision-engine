@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Loan Scoring UI</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 760px; color: #1f2937; }
+{% extends "base.html" %}
+{% block title %}Score Client — Loan Scoring{% endblock %}
+{% block styles %}
       .card { background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1px solid #dbeafe; padding: 1.25rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08); }
       form { display: grid; gap: 0.8rem; }
       label { font-weight: 600; }
@@ -13,11 +8,10 @@
       button { padding: 0.75rem 1rem; width: fit-content; border: none; border-radius: 8px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
       h1 { color: #1d4ed8; }
       .subtle { color: #475569; }
-    </style>
-  </head>
-  <body>
+{% endblock %}
+{% block content %}
     <div class="card">
-      <h1>Loan Scoring UI</h1>
+      <h1>Score Client</h1>
       <p class="subtle">Enter applicant information and see the score estimate.</p>
       <form action="/score" method="post">
       <label>Debt</label>
@@ -47,7 +41,5 @@
 
       <button type="submit">Score applicant</button>
       </form>
-      <p><a href="/rules">Open rule configuration studio</a></p>
     </div>
-  </body>
-</html>
+{% endblock %}
